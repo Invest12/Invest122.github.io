@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProConnect - Advanced Video Conference</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Authentication Container */
+        .auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            padding: 20px;
+            transition: opacity 0.5s ease;
+        }
+
+        .auth-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .auth-box {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .auth-tab.active {
+            color: #667eea;
+            background: white;
+        }
+
+        .auth-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+        }
+
+        .auth-content {
+            padding: 40px;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 45px 15px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+
+        .auto-login {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .auto-login-btn {
+            background: #28a745;
+        }
+
+        .auto-login-btn:hover {
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        /* Profile Preview */
+        .profile-preview {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .profile-preview:hover {
+            border-color: #667eea;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .profile-info h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .profile-info p {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        /* Validation Messages */
+        .validation-message {
+            font-size: 12px;
+            color: #ff4444;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .validation-message.show {
+            display: block;
+        }
+
+        .validation-message.success {
+            color: #28a745;
+        }
+
+        /* Main App Container */
+        .app-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .app-container.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .brand h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-info h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .user-info p {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .logout-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Video Conference Container */
+        .video-conference-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            background: #000;
+        }
+
+        #root {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+
+        /* Recording Area Below Display Board */
+        .recording-area {
+            background: #000;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .recording-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .record-btn {
+            background: linear-gradient(135deg, #ff4444, #ff2222);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            min-width: 160px;
+            justify-content: center;
+        }
+
+        .record-btn:hover {
+            background: linear-gradient(135deg, #ff2222, #ff0000);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            animation: pulse 1.5s infinite;
+        }
+
+        .record-btn.recording::before {
+            content: "●";
+            font-size: 12px;
+            animation: blink 1s infinite;
+        }
+
+        .record-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .recording-status {
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 14px;
+            background: rgba(255, 68, 68, 0.2);
+            border-radius: 15px;
+            min-width: 150px;
+            justify-content: center;
+            height: 40px;
+        }
+
+        .recording-time {
+            font-weight: bold;
+            color: #ff4444;
+            font-family: monospace;
+            margin-left: 5px;
+        }
+
+        .recording-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #ff4444;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Recording info */
+        .recording-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .recording-info span {
+            opacity: 0.7;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            color: white;
+            font-size: 18px;
+            display: none;
+        }
+
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error message */
+        .error-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ff4444;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+            z-index: 1001;
+            display: none;
+            max-width: 300px;
+            font-size: 14px;
+        }
+
+        .error-message.success {
+            background: #4CAF50;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        /* Media constraints info */
+        .media-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1001;
+            display: none;
+        }
+
+        /* Welcome Modal */
+        .welcome-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+            display: none;
+        }
+
+        .welcome-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            animation: modalSlideUp 0.5s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+        }
+
+        .welcome-content h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .welcome-content p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .welcome-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .welcome-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .top-nav {
+                padding: 15px 20px;
+            }
+            
+            .brand h1 {
+                font-size: 20px;
+            }
+            
+            .user-profile {
+                gap: 10px;
+            }
+            
+            .user-info h3 {
+                font-size: 14px;
+            }
+            
+            .user-info p {
+                font-size: 12px;
+            }
+            
+            .logout-btn {
+                padding: 6px 15px;
+                font-size: 14px;
+            }
+            
+            .recording-controls {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .record-btn {
+                min-width: 140px;
+                padding: 10px 20px;
+            }
+            
+            .recording-status {
+                min-width: 120px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Container -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-box">
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Login</div>
+                <div class="auth-tab" data-tab="register">Register</div>
+            </div>
+            
+            <div class="auth-content">
+                <!-- Login Form -->
+                <div class="auth-form active" id="loginForm">
+                    <h2 class="form-title">Welcome Back</h2>
+                    
+                    <div class="input-group">
+                        <input type="text" id="loginUsername" placeholder="Username" required>
+                        <div class="validation-message" id="loginUsernameError"></div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <button type="button" class="password-toggle" data-target="loginPassword">Show</button>
+                        <div class="validation-message" id="loginPasswordError"></div>
+                    </div>
+                    
+                    <button class="auth-btn" id="loginBtn">Login</button>
+                    
+                    <div class="auto-login">
+                        <button class="auth-btn auto-login-btn" id="autoLoginBtn">Auto-Login</button>
+                        <p style="margin-top: 10px; color: #6c757d; font-size: 14px;">Uses last login credentials</p>
+                    </div>
+                </div>
+                
+                <!-- Register Form -->
+                <div class="auth-form" id="registerForm">
+                    <h2 class="form-title">Create Account</h2>
+                    
+                    <div class="input-group">
+                        <input type="text" id="registerUsername" placeholder="Choose Username (min 3 chars)" required>
+                        <div class="validation-message" id="registerUsernameError"></div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="email" id="registerEmail" placeholder="Email Address" required>
+                        <div class="validation-message" id="registerEmailError"></div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="password" id="registerPassword" placeholder="Create Password (min 6 chars)" required>
+                        <button type="button" class="password-toggle" data-target="registerPassword">Show</button>
+                        <div class="validation-message" id="registerPasswordError"></div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="password" id="registerConfirmPassword" placeholder="Confirm Password" required>
+                        <button type="button" class="password-toggle" data-target="registerConfirmPassword">Show</button>
+                        <div class="validation-message" id="registerConfirmPasswordError"></div>
+                    </div>
+                    
+                    <!-- Profile Preview -->
+                    <div class="profile-preview" id="profilePreview">
+                        <div class="profile-avatar" id="previewAvatar">?</div>
+                        <div class="profile-info">
+                            <h3 id="previewUsername">Username</h3>
+                            <p id="previewEmail">email@example.com</p>
+                        </div>
+                    </div>
+                    
+                    <button class="auth-btn" id="registerBtn">Create Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main App Container -->
+    <div class="app-container" id="appContainer">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <div class="brand">
+                <div class="brand-icon">PC</div>
+                <h1>ProConnect</h1>
+            </div>
+            
+            <div class="user-profile">
+                <div class="user-avatar" id="userAvatar">?</div>
+                <div class="user-info">
+                    <h3 id="displayUsername">Guest</h3>
+                    <p id="displayEmail">guest@example.com</p>
+                </div>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+        </nav>
+        
+        <!-- Video Conference Container -->
+        <div class="video-conference-wrapper">
+            <div id="root"></div>
+            
+            <!-- Recording Area Below Display Board -->
+            <div class="recording-area">
+                <div class="recording-controls" id="recordingControls" style="display: none;">
+                    <button class="record-btn" id="recordBtn">
+                        <span id="recordText">Start Recording</span>
+                    </button>
+                    <div class="recording-status" id="recordingStatus" style="display: none;">
+                        <span class="recording-indicator"></span>
+                        <span>Recording: </span>
+                        <span class="recording-time" id="recordingTime">00:00</span>
+                    </div>
+                </div>
+                <div class="recording-info">
+                    <span>Press Ctrl+Shift+R to start/stop recording</span>
+                    <span>Recording saves as WebM/MP4 file</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Welcome Modal -->
+    <div class="welcome-modal" id="welcomeModal">
+        <div class="welcome-content">
+            <div class="welcome-icon">👋</div>
+            <h2>Welcome to ProConnect!</h2>
+            <p>Your professional video conferencing platform. Start your first meeting or join an existing one.</p>
+            <button class="welcome-btn" id="closeWelcomeBtn">Let's Go!</button>
+        </div>
+    </div>
+    
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader"></div>
+        <div id="loadingText">Processing...</div>
+    </div>
+    
+    <!-- Error message -->
+    <div class="error-message" id="errorMessage"></div>
+    
+    <!-- Media info -->
+    <div class="media-info" id="mediaInfo"></div>
+
+    <!-- ZegoUIKit SDK -->
+    <script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
+    
+    <!-- Main Application Script -->
+    <script>
+        // ==================== USER MANAGEMENT SYSTEM ====================
+        class UserManager {
+            constructor() {
+                this.usersKey = 'proconnect_users';
+                this.currentUserKey = 'proconnect_current_user';
+                this.lastLoginKey = 'proconnect_last_login';
+                this.initializeStorage();
+            }
+            
+            initializeStorage() {
+                if (!localStorage.getItem(this.usersKey)) {
+                    localStorage.setItem(this.usersKey, JSON.stringify([]));
+                }
+            }
+            
+            // Generate avatar from username
+            generateAvatar(username) {
+                if (!username) return '?';
+                return username.charAt(0).toUpperCase();
+            }
+            
+            // Generate random color based on username
+            generateAvatarColor(username) {
+                const colors = [
+                    '#667eea', '#764ba2', '#f093fb', '#f5576c',
+                    '#4facfe', '#00f2fe', '#43e97b', '#38f9d7',
+                    '#fa709a', '#fee140', '#a8edea', '#fed6e3'
+                ];
+                if (!username) return colors[0];
+                const hash = username.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+                return colors[hash % colors.length];
+            }
+            
+            // Check if username exists
+            usernameExists(username) {
+                const users = this.getUsers();
+                return users.some(user => user.username === username);
+            }
+            
+            // Check if email exists
+            emailExists(email) {
+                const users = this.getUsers();
+                return users.some(user => user.email === email);
+            }
+            
+            // Register new user
+            register(username, email, password) {
+                // Validate username length
+                if (username.length < 3) {
+                    throw new Error('Username must be at least 3 characters');
+                }
+                
+                // Validate password length
+                if (password.length < 6) {
+                    throw new Error('Password must be at least 6 characters');
+                }
+                
+                // Check if username exists
+                if (this.usernameExists(username)) {
+                    throw new Error('Username already exists');
+                }
+                
+                // Check if email exists
+                if (this.emailExists(email)) {
+                    throw new Error('Email already registered');
+                }
+                
+                // Validate email format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    throw new Error('Invalid email format');
+                }
+                
+                const users = this.getUsers();
+                const newUser = {
+                    id: Date.now().toString(),
+                    username,
+                    email,
+                    password,
+                    createdAt: new Date().toISOString(),
+                    lastLogin: null,
+                    avatarColor: this.generateAvatarColor(username)
+                };
+                
+                users.push(newUser);
+                localStorage.setItem(this.usersKey, JSON.stringify(users));
+                
+                return newUser;
+            }
+            
+            // Login user
+            login(username, password) {
+                const users = this.getUsers();
+                const user = users.find(u => u.username === username && u.password === password);
+                
+                if (!user) {
+                    // Check if username exists
+                    const userExists = users.find(u => u.username === username);
+                    if (userExists) {
+                        throw new Error('Invalid password');
+                    } else {
+                        throw new Error('Account not found. Please create an account.');
+                    }
+                }
+                
+                // Update last login
+                user.lastLogin = new Date().toISOString();
+                localStorage.setItem(this.usersKey, JSON.stringify(users));
+                
+                // Set current user
+                localStorage.setItem(this.currentUserKey, JSON.stringify(user));
+                localStorage.setItem(this.lastLoginKey, JSON.stringify({
+                    username,
+                    timestamp: new Date().toISOString()
+                }));
+                
+                return user;
+            }
+            
+            // Auto-login with last credentials
+            autoLogin() {
+                const lastLogin = JSON.parse(localStorage.getItem(this.lastLoginKey));
+                if (!lastLogin) return null;
+                
+                const users = this.getUsers();
+                const user = users.find(u => u.username === lastLogin.username);
+                
+                if (user) {
+                    localStorage.setItem(this.currentUserKey, JSON.stringify(user));
+                    return user;
+                }
+                
+                return null;
+            }
+            
+            // Get current user
+            getCurrentUser() {
+                const userJson = localStorage.getItem(this.currentUserKey);
+                return userJson ? JSON.parse(userJson) : null;
+            }
+            
+            // Get all users
+            getUsers() {
+                const usersJson = localStorage.getItem(this.usersKey);
+                return usersJson ? JSON.parse(usersJson) : [];
+            }
+            
+            // Logout
+            logout() {
+                localStorage.removeItem(this.currentUserKey);
+            }
+            
+            // Update user profile
+            updateProfile(userId, updates) {
+                const users = this.getUsers();
+                const userIndex = users.findIndex(u => u.id === userId);
+                
+                if (userIndex === -1) return null;
+                
+                users[userIndex] = { ...users[userIndex], ...updates };
+                localStorage.setItem(this.usersKey, JSON.stringify(users));
+                
+                // Update current user if it's the same user
+                const currentUser = this.getCurrentUser();
+                if (currentUser && currentUser.id === userId) {
+                    localStorage.setItem(this.currentUserKey, JSON.stringify(users[userIndex]));
+                }
+                
+                return users[userIndex];
+            }
+        }
+
+        // ==================== VIDEO CONFERENCE & RECORDING ====================
+        class VideoConference {
+            constructor(userManager) {
+                this.userManager = userManager;
+                this.mediaRecorder = null;
+                this.recordedChunks = [];
+                this.recordingStartTime = null;
+                this.recordingTimer = null;
+                this.combinedStream = null;
+                this.zp = null;
+                this.isRecording = false;
+                this.isRecordingSupported = false;
+                this.roomID = null;
+                this.recordingControls = document.getElementById('recordingControls');
+                this.recordBtn = document.getElementById('recordBtn');
+                this.recordText = document.getElementById('recordText');
+                this.recordingStatus = document.getElementById('recordingStatus');
+                this.recordingTime = document.getElementById('recordingTime');
+            }
+            
+            initialize() {
+                this.checkRecordingSupport();
+                this.setupEventListeners();
+            }
+            
+            checkRecordingSupport() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    console.error('Media devices API not supported');
+                    return false;
+                }
+                
+                if (!MediaRecorder) {
+                    console.error('MediaRecorder API not supported');
+                    return false;
+                }
+                
+                const mimeTypes = [
+                    'video/webm;codecs=vp9,opus',
+                    'video/webm;codecs=vp8,opus',
+                    'video/webm',
+                    'video/mp4',
+                    'video/mp4;codecs=avc1.42E01E,mp4a.40.2'
+                ];
+                
+                const supportedType = mimeTypes.find(type => 
+                    MediaRecorder.isTypeSupported ? MediaRecorder.isTypeSupported(type) : true
+                );
+                
+                this.isRecordingSupported = !!supportedType;
+                
+                // Update UI based on support
+                if (this.recordBtn) {
+                    this.recordBtn.disabled = !this.isRecordingSupported;
+                    if (!this.isRecordingSupported) {
+                        this.recordBtn.title = 'Recording not supported in this browser';
+                    }
+                }
+                
+                return this.isRecordingSupported;
+            }
+            
+            setupEventListeners() {
+                // Record button click
+                if (this.recordBtn) {
+                    this.recordBtn.addEventListener('click', () => this.toggleRecording());
+                }
+                
+                // Keyboard shortcut for recording (Ctrl+Shift+R)
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.shiftKey && e.key === 'R' && !e.repeat) {
+                        e.preventDefault();
+                        if (this.isRecordingSupported && this.recordBtn && !this.recordBtn.disabled) {
+                            this.toggleRecording();
+                        }
+                    }
+                });
+                
+                // Handle page visibility changes
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.isRecording) {
+                        console.log('Page hidden - stopping recording');
+                        this.stopRecording();
+                        this.showError('Recording stopped because page was hidden');
+                    }
+                });
+                
+                // Handle window unload
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.isRecording) {
+                        e.preventDefault();
+                        e.returnValue = 'You are currently recording. Are you sure you want to leave?';
+                        this.stopRecording();
+                    }
+                });
+            }
+            
+            getUrlParams(url) {
+                let urlStr = url.split('?')[1];
+                if (!urlStr) return {};
+                const urlSearchParams = new URLSearchParams(urlStr);
+                return Object.fromEntries(urlSearchParams.entries());
+            }
+            
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+                return `${mins}:${secs}`;
+            }
+            
+            updateRecordingTime() {
+                if (!this.recordingStartTime) return;
+                const elapsedSeconds = Math.floor((Date.now() - this.recordingStartTime) / 1000);
+                if (this.recordingTime) {
+                    this.recordingTime.textContent = this.formatTime(elapsedSeconds);
+                }
+            }
+            
+            async startRecording() {
+                try {
+                    if (this.isRecording) {
+                        this.stopRecording();
+                        return;
+                    }
+                    
+                    this.showLoading('Preparing recording...');
+                    
+                    if (!this.isRecordingSupported) {
+                        throw new Error('Recording is not supported in this browser');
+                    }
+                    
+                    this.combinedStream = await this.createCombinedStream();
+                    
+                    if (!this.combinedStream) {
+                        throw new Error('Could not access any media for recording. Please check permissions.');
+                    }
+                    
+                    if (this.combinedStream.getTracks().length === 0) {
+                        throw new Error('No media tracks available for recording');
+                    }
+                    
+                    const mimeTypes = [
+                        'video/webm;codecs=vp9,opus',
+                        'video/webm;codecs=vp8,opus',
+                        'video/webm',
+                        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+                        'video/mp4'
+                    ];
+                    
+                    let selectedType = '';
+                    for (const type of mimeTypes) {
+                        if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type)) {
+                            selectedType = type;
+                            break;
+                        }
+                    }
+                    
+                    if (!selectedType) {
+                        selectedType = 'video/webm';
+                    }
+                    
+                    const options = {
+                        mimeType: selectedType,
+                        videoBitsPerSecond: 2500000,
+                        audioBitsPerSecond: 128000
+                    };
+                    
+                    this.mediaRecorder = new MediaRecorder(this.combinedStream, options);
+                    this.recordedChunks = [];
+                    
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data && event.data.size > 0) {
+                            this.recordedChunks.push(event.data);
+                        }
+                    };
+                    
+                    this.mediaRecorder.onstop = () => {
+                        this.saveRecording();
+                    };
+                    
+                    this.mediaRecorder.onerror = (event) => {
+                        console.error('MediaRecorder error:', event.error);
+                        this.stopRecording();
+                        this.showError('Recording error: ' + event.error.name, false);
+                    };
+                    
+                    this.mediaRecorder.start(1000);
+                    this.isRecording = true;
+                    
+                    if (this.recordBtn) this.recordBtn.classList.add('recording');
+                    if (this.recordText) this.recordText.textContent = 'Stop Recording';
+                    if (this.recordingStatus) this.recordingStatus.style.display = 'flex';
+                    this.recordingStartTime = Date.now();
+                    
+                    this.recordingTimer = setInterval(() => this.updateRecordingTime(), 1000);
+                    
+                    this.hideLoading();
+                    this.showError('Recording started successfully!', true);
+                    
+                } catch (error) {
+                    console.error('Error starting recording:', error);
+                    this.hideLoading();
+                    
+                    let errorMessage = 'Failed to start recording. ';
+                    if (error.name === 'NotAllowedError') {
+                        errorMessage += 'Please allow microphone and camera permissions.';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMessage += 'No microphone or camera found.';
+                    } else if (error.name === 'NotReadableError') {
+                        errorMessage += 'Camera or microphone is in use by another application.';
+                    } else {
+                        errorMessage += error.message || 'Please check your permissions and try again.';
+                    }
+                    
+                    this.showError(errorMessage, false);
+                    
+                    this.isRecording = false;
+                    if (this.recordBtn) this.recordBtn.classList.remove('recording');
+                    if (this.recordText) this.recordText.textContent = 'Start Recording';
+                    if (this.recordingStatus) this.recordingStatus.style.display = 'none';
+                }
+            }
+            
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording && this.mediaRecorder.state !== 'inactive') {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+                    
+                    if (this.combinedStream) {
+                        this.combinedStream.getTracks().forEach(track => track.stop());
+                    }
+                    
+                    if (this.recordingTimer) {
+                        clearInterval(this.recordingTimer);
+                        this.recordingTimer = null;
+                    }
+                    
+                    if (this.recordBtn) this.recordBtn.classList.remove('recording');
+                    if (this.recordText) this.recordText.textContent = 'Start Recording';
+                    if (this.recordingStatus) this.recordingStatus.style.display = 'none';
+                    
+                    this.showLoading('Processing recording...');
+                }
+            }
+            
+            saveRecording() {
+                try {
+                    if (this.recordedChunks.length === 0) {
+                        throw new Error('No recording data available');
+                    }
+                    
+                    const blob = new Blob(this.recordedChunks, {
+                        type: this.mediaRecorder.mimeType || 'video/webm'
+                    });
+                    
+                    if (blob.size === 0) {
+                        throw new Error('Recording file is empty');
+                    }
+                    
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    
+                    const timestamp = new Date().toISOString()
+                        .replace(/[:.]/g, '-')
+                        .replace('T', '_')
+                        .split('.')[0];
+                    
+                    const extension = this.mediaRecorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
+                    const filename = `proconnect_recording_${timestamp}.${extension}`;
+                    a.download = filename;
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        this.recordedChunks = [];
+                        this.hideLoading();
+                        this.showError(`Recording saved as ${filename}`, true);
+                        if (this.recordingTime) this.recordingTime.textContent = '00:00';
+                    }, 100);
+                    
+                } catch (error) {
+                    console.error('Error saving recording:', error);
+                    this.hideLoading();
+                    this.showError('Failed to save recording. The recording might be empty or corrupted.', false);
+                    this.recordedChunks = [];
+                }
+            }
+            
+            async createCombinedStream() {
+                try {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+                        try {
+                            const displayStream = await navigator.mediaDevices.getDisplayMedia({
+                                video: {
+                                    displaySurface: 'browser',
+                                    width: { ideal: 1920 },
+                                    height: { ideal: 1080 },
+                                    frameRate: { ideal: 30 }
+                                },
+                                audio: {
+                                    echoCancellation: false,
+                                    noiseSuppression: false,
+                                    sampleRate: 44100,
+                                    channelCount: 2
+                                }
+                            });
+                            
+                            displayStream.getVideoTracks()[0].onended = () => {
+                                console.log('Screen sharing stopped');
+                                if (this.isRecording) {
+                                    this.stopRecording();
+                                    this.showError('Screen sharing stopped. Recording ended.', false);
+                                }
+                            };
+                            
+                            return displayStream;
+                        } catch (screenError) {
+                            console.log('Screen capture failed or cancelled:', screenError);
+                        }
+                    }
+                    
+                    // Fallback to camera and microphone
+                    try {
+                        const userMedia = await navigator.mediaDevices.getUserMedia({ 
+                            audio: true,
+                            video: true 
+                        });
+                        return userMedia;
+                    } catch (userMediaError) {
+                        console.log('Camera/microphone access failed:', userMediaError);
+                        
+                        // Last fallback: microphone only
+                        try {
+                            const micOnly = await navigator.mediaDevices.getUserMedia({ 
+                                audio: true,
+                                video: false 
+                            });
+                            return micOnly;
+                        } catch (finalError) {
+                            console.error('All recording methods failed:', finalError);
+                            return null;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error creating combined stream:', error);
+                    return null;
+                }
+            }
+            
+            toggleRecording() {
+                if (this.isRecording) {
+                    this.stopRecording();
+                } else {
+                    this.startRecording();
+                }
+            }
+            
+            showRecordingControls(show) {
+                if (this.recordingControls) {
+                    this.recordingControls.style.display = show ? 'flex' : 'none';
+                }
+            }
+            
+            showLoading(text = 'Processing...') {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                const loadingText = document.getElementById('loadingText');
+                if (loadingText) loadingText.textContent = text;
+                if (loadingOverlay) loadingOverlay.style.display = 'flex';
+            }
+            
+            hideLoading() {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+            }
+            
+            showError(message, isSuccess = false) {
+                const errorDiv = document.getElementById('errorMessage');
+                if (!errorDiv) return;
+                
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                if (isSuccess) {
+                    errorDiv.classList.add('success');
+                } else {
+                    errorDiv.classList.remove('success');
+                }
+                
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 5000);
+            }
+            
+            showMediaInfo(info) {
+                const infoDiv = document.getElementById('mediaInfo');
+                if (!infoDiv) return;
+                
+                infoDiv.textContent = info;
+                infoDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    infoDiv.style.display = 'none';
+                }, 3000);
+            }
+            
+            startConference(user) {
+                const urlParams = this.getUrlParams(window.location.href);
+                this.roomID = urlParams['roomID'] || (Math.floor(Math.random() * 10000) + "");
+                
+                const userID = Date.now().toString();
+                const userName = user.username;
+                const appID = 2009298897;
+                const serverSecret = "c237eef4b8a25b35cbe51ae7f574d3b2";
+                
+                const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+                    appID, 
+                    serverSecret, 
+                    this.roomID, 
+                    userID, 
+                    userName
+                );
+                
+                this.zp = ZegoUIKitPrebuilt.create(kitToken);
+                
+                this.zp.joinRoom({
+                    container: document.querySelector("#root"),
+                    sharedLinks: [{
+                        name: 'Personal link',
+                        url: window.location.protocol + '//' + window.location.host + window.location.pathname + '?roomID=' + this.roomID,
+                    }],
+                    scenario: {
+                        mode: ZegoUIKitPrebuilt.VideoConference,
+                    },
+                    turnOnMicrophoneWhenJoining: true,
+                    turnOnCameraWhenJoining: true,
+                    showMyCameraToggleButton: true,
+                    showMyMicrophoneToggleButton: true,
+                    showAudioVideoSettingsButton: true,
+                    showScreenSharingButton: true,
+                    showTextChat: true,
+                    showUserList: true,
+                    maxUsers: 50,
+                    layout: "Auto",
+                    showLayoutButton: true,
+                    onJoinRoom: () => {
+                        console.log('Joined room successfully');
+                        
+                        // Show recording controls after a delay
+                        setTimeout(() => {
+                            this.showRecordingControls(true);
+                        }, 2000);
+                    },
+                    onLeaveRoom: () => {
+                        if (this.isRecording) {
+                            this.stopRecording();
+                        }
+                    }
+                });
+            }
+        }
+
+        // ==================== MAIN APPLICATION ====================
+        class Application {
+            constructor() {
+                this.userManager = new UserManager();
+                this.videoConference = new VideoConference(this.userManager);
+                this.currentUser = null;
+                this.initialize();
+            }
+            
+            initialize() {
+                this.setupEventListeners();
+                this.checkAutoLogin();
+                this.videoConference.initialize();
+            }
+            
+            setupEventListeners() {
+                // Tab switching
+                document.querySelectorAll('.auth-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        const tabName = e.target.dataset.tab;
+                        this.switchAuthTab(tabName);
+                    });
+                });
+                
+                // Password toggle
+                document.querySelectorAll('.password-toggle').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const targetId = e.target.dataset.target;
+                        const input = document.getElementById(targetId);
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            e.target.textContent = 'Hide';
+                        } else {
+                            input.type = 'password';
+                            e.target.textContent = 'Show';
+                        }
+                    });
+                });
+                
+                // Login form
+                document.getElementById('loginBtn').addEventListener('click', () => this.handleLogin());
+                document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.handleLogin();
+                });
+                
+                // Auto login
+                document.getElementById('autoLoginBtn').addEventListener('click', () => this.handleAutoLogin());
+                
+                // Register form - FIXED: Event listener was not properly connected
+                document.getElementById('registerBtn').addEventListener('click', () => this.handleRegister());
+                
+                // Add Enter key support for registration
+                document.getElementById('registerConfirmPassword').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.handleRegister();
+                });
+                
+                // Username input for profile preview
+                document.getElementById('registerUsername').addEventListener('input', () => this.updateProfilePreview());
+                document.getElementById('registerEmail').addEventListener('input', () => this.updateProfilePreview());
+                
+                // Logout
+                document.getElementById('logoutBtn').addEventListener('click', () => this.handleLogout());
+                
+                // Welcome modal
+                document.getElementById('closeWelcomeBtn').addEventListener('click', () => {
+                    document.getElementById('welcomeModal').style.display = 'none';
+                });
+                
+                // Real-time validation for registration form
+                this.setupRealTimeValidation();
+            }
+            
+            setupRealTimeValidation() {
+                // Username validation
+                document.getElementById('registerUsername').addEventListener('blur', () => {
+                    const username = document.getElementById('registerUsername').value.trim();
+                    const errorElement = document.getElementById('registerUsernameError');
+                    
+                    if (username.length < 3 && username.length > 0) {
+                        this.showValidationError(errorElement, 'Username must be at least 3 characters');
+                    } else if (this.userManager.usernameExists(username)) {
+                        this.showValidationError(errorElement, 'Username already exists');
+                    } else {
+                        this.clearValidationError(errorElement);
+                    }
+                });
+                
+                // Email validation
+                document.getElementById('registerEmail').addEventListener('blur', () => {
+                    const email = document.getElementById('registerEmail').value.trim();
+                    const errorElement = document.getElementById('registerEmailError');
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    
+                    if (email && !emailRegex.test(email)) {
+                        this.showValidationError(errorElement, 'Invalid email format');
+                    } else if (this.userManager.emailExists(email)) {
+                        this.showValidationError(errorElement, 'Email already registered');
+                    } else {
+                        this.clearValidationError(errorElement);
+                    }
+                });
+                
+                // Password validation
+                document.getElementById('registerPassword').addEventListener('blur', () => {
+                    const password = document.getElementById('registerPassword').value;
+                    const errorElement = document.getElementById('registerPasswordError');
+                    
+                    if (password.length < 6 && password.length > 0) {
+                        this.showValidationError(errorElement, 'Password must be at least 6 characters');
+                    } else {
+                        this.clearValidationError(errorElement);
+                    }
+                });
+                
+                // Confirm password validation
+                document.getElementById('registerConfirmPassword').addEventListener('blur', () => {
+                    const password = document.getElementById('registerPassword').value;
+                    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+                    const errorElement = document.getElementById('registerConfirmPasswordError');
+                    
+                    if (password !== confirmPassword && confirmPassword.length > 0) {
+                        this.showValidationError(errorElement, 'Passwords do not match');
+                    } else {
+                        this.clearValidationError(errorElement);
+                    }
+                });
+            }
+            
+            showValidationError(element, message) {
+                if (element) {
+                    element.textContent = message;
+                    element.classList.add('show');
+                    element.classList.remove('success');
+                }
+            }
+            
+            clearValidationError(element) {
+                if (element) {
+                    element.textContent = '';
+                    element.classList.remove('show');
+                }
+            }
+            
+            switchAuthTab(tabName) {
+                // Update active tab
+                document.querySelectorAll('.auth-tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.tab === tabName);
+                });
+                
+                // Show active form
+                document.querySelectorAll('.auth-form').forEach(form => {
+                    form.classList.toggle('active', form.id === `${tabName}Form`);
+                });
+                
+                // Reset form inputs and clear validation errors
+                if (tabName === 'register') {
+                    this.updateProfilePreview();
+                    // Clear all validation errors
+                    document.querySelectorAll('.validation-message').forEach(el => {
+                        this.clearValidationError(el);
+                    });
+                }
+            }
+            
+            updateProfilePreview() {
+                const username = document.getElementById('registerUsername').value || 'Username';
+                const email = document.getElementById('registerEmail').value || 'email@example.com';
+                const avatar = this.userManager.generateAvatar(username);
+                
+                document.getElementById('previewAvatar').textContent = avatar;
+                document.getElementById('previewUsername').textContent = username;
+                document.getElementById('previewEmail').textContent = email;
+                
+                // Update avatar color
+                const avatarColor = this.userManager.generateAvatarColor(username);
+                document.getElementById('previewAvatar').style.background = avatarColor;
+            }
+            
+            async handleLogin() {
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value.trim();
+                
+                // Clear previous errors
+                this.clearValidationError(document.getElementById('loginUsernameError'));
+                this.clearValidationError(document.getElementById('loginPasswordError'));
+                
+                if (!username || !password) {
+                    if (!username) {
+                        this.showValidationError(document.getElementById('loginUsernameError'), 'Username is required');
+                    }
+                    if (!password) {
+                        this.showValidationError(document.getElementById('loginPasswordError'), 'Password is required');
+                    }
+                    return;
+                }
+                
+                try {
+                    this.showLoading('Logging in...');
+                    const user = this.userManager.login(username, password);
+                    
+                    // Simulate network delay
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    this.loginUser(user);
+                    
+                } catch (error) {
+                    this.hideLoading();
+                    
+                    // Show appropriate error message
+                    if (error.message.includes('Account not found')) {
+                        this.showValidationError(document.getElementById('loginUsernameError'), error.message);
+                        this.showError('Account not found. Please create an account.', false);
+                    } else if (error.message.includes('Invalid password')) {
+                        this.showValidationError(document.getElementById('loginPasswordError'), error.message);
+                        this.showError('Invalid password. Please try again.', false);
+                    } else {
+                        this.showError(error.message, false);
+                    }
+                }
+            }
+            
+            async handleAutoLogin() {
+                try {
+                    this.showLoading('Auto-logging in...');
+                    const user = this.userManager.autoLogin();
+                    
+                    if (!user) {
+                        throw new Error('No previous login found. Please login manually.');
+                    }
+                    
+                    // Simulate network delay
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                    
+                    this.loginUser(user);
+                    
+                } catch (error) {
+                    this.showError(error.message, false);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            async handleRegister() {
+                const username = document.getElementById('registerUsername').value.trim();
+                const email = document.getElementById('registerEmail').value.trim();
+                const password = document.getElementById('registerPassword').value.trim();
+                const confirmPassword = document.getElementById('registerConfirmPassword').value.trim();
+                
+                // Clear all validation errors
+                document.querySelectorAll('.validation-message').forEach(el => {
+                    this.clearValidationError(el);
+                });
+                
+                // Validation
+                let hasError = false;
+                
+                if (!username) {
+                    this.showValidationError(document.getElementById('registerUsernameError'), 'Username is required');
+                    hasError = true;
+                } else if (username.length < 3) {
+                    this.showValidationError(document.getElementById('registerUsernameError'), 'Username must be at least 3 characters');
+                    hasError = true;
+                } else if (this.userManager.usernameExists(username)) {
+                    this.showValidationError(document.getElementById('registerUsernameError'), 'Username already exists');
+                    hasError = true;
+                }
+                
+                if (!email) {
+                    this.showValidationError(document.getElementById('registerEmailError'), 'Email is required');
+                    hasError = true;
+                } else {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        this.showValidationError(document.getElementById('registerEmailError'), 'Invalid email format');
+                        hasError = true;
+                    } else if (this.userManager.emailExists(email)) {
+                        this.showValidationError(document.getElementById('registerEmailError'), 'Email already registered');
+                        hasError = true;
+                    }
+                }
+                
+                if (!password) {
+                    this.showValidationError(document.getElementById('registerPasswordError'), 'Password is required');
+                    hasError = true;
+                } else if (password.length < 6) {
+                    this.showValidationError(document.getElementById('registerPasswordError'), 'Password must be at least 6 characters');
+                    hasError = true;
+                }
+                
+                if (!confirmPassword) {
+                    this.showValidationError(document.getElementById('registerConfirmPasswordError'), 'Please confirm your password');
+                    hasError = true;
+                } else if (password !== confirmPassword) {
+                    this.showValidationError(document.getElementById('registerConfirmPasswordError'), 'Passwords do not match');
+                    hasError = true;
+                }
+                
+                if (hasError) {
+                    this.showError('Please fix the errors in the form', false);
+                    return;
+                }
+                
+                try {
+                    this.showLoading('Creating account...');
+                    const user = this.userManager.register(username, email, password);
+                    
+                    // Simulate network delay
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    // Auto-login after registration
+                    const loggedInUser = this.userManager.login(username, password);
+                    this.loginUser(loggedInUser);
+                    
+                    // Show success message
+                    this.showError('Account created successfully! Welcome to ProConnect!', true);
+                    
+                } catch (error) {
+                    this.hideLoading();
+                    this.showError(error.message, false);
+                    
+                    // Show specific validation error
+                    if (error.message.includes('Username')) {
+                        this.showValidationError(document.getElementById('registerUsernameError'), error.message);
+                    } else if (error.message.includes('Email')) {
+                        this.showValidationError(document.getElementById('registerEmailError'), error.message);
+                    } else if (error.message.includes('Password')) {
+                        this.showValidationError(document.getElementById('registerPasswordError'), error.message);
+                    }
+                }
+            }
+            
+            loginUser(user) {
+                this.currentUser = user;
+                
+                // Update UI
+                document.getElementById('authContainer').classList.add('hidden');
+                document.getElementById('appContainer').classList.add('active');
+                
+                // Update user profile in top nav
+                this.updateUserProfile(user);
+                
+                // Start video conference
+                setTimeout(() => {
+                    this.videoConference.startConference(user);
+                }, 500);
+                
+                // Show welcome modal for first-time users or new registration
+                const isNewUser = !user.lastLogin || (new Date() - new Date(user.lastLogin)) > 86400000; // 24 hours
+                if (isNewUser) {
+                    setTimeout(() => {
+                        document.getElementById('welcomeModal').style.display = 'flex';
+                    }, 1000);
+                }
+                
+                this.hideLoading();
+                
+                // Show login success message
+                if (!user.lastLogin) {
+                    this.showError(`Welcome, ${user.username}! Your account has been created successfully.`, true);
+                } else {
+                    this.showError(`Welcome back, ${user.username}!`, true);
+                }
+            }
+            
+            updateUserProfile(user) {
+                const avatar = this.userManager.generateAvatar(user.username);
+                const avatarColor = this.userManager.generateAvatarColor(user.username);
+                
+                document.getElementById('userAvatar').textContent = avatar;
+                document.getElementById('userAvatar').style.background = avatarColor;
+                document.getElementById('displayUsername').textContent = user.username;
+                document.getElementById('displayEmail').textContent = user.email;
+            }
+            
+            handleLogout() {
+                this.videoConference.stopRecording();
+                this.userManager.logout();
+                this.currentUser = null;
+                
+                // Reset UI
+                document.getElementById('authContainer').classList.remove('hidden');
+                document.getElementById('appContainer').classList.remove('active');
+                this.videoConference.showRecordingControls(false);
+                
+                // Reset forms
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('registerUsername').value = '';
+                document.getElementById('registerEmail').value = '';
+                document.getElementById('registerPassword').value = '';
+                document.getElementById('registerConfirmPassword').value = '';
+                
+                // Clear validation errors
+                document.querySelectorAll('.validation-message').forEach(el => {
+                    this.clearValidationError(el);
+                });
+                
+                // Switch to login tab
+                this.switchAuthTab('login');
+                
+                // Clear the video conference container
+                const root = document.getElementById('root');
+                if (root) root.innerHTML = '';
+                
+                this.showError('Logged out successfully', true);
+            }
+            
+            checkAutoLogin() {
+                const user = this.userManager.getCurrentUser();
+                if (user) {
+                    this.loginUser(user);
+                }
+            }
+            
+            showError(message, isSuccess = false) {
+                this.videoConference.showError(message, isSuccess);
+            }
+            
+            showLoading(text = 'Processing...') {
+                this.videoConference.showLoading(text);
+            }
+            
+            hideLoading() {
+                this.videoConference.hideLoading();
+            }
+        }
+
+        // ==================== INITIALIZE APPLICATION ====================
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize the application
+            window.app = new Application();
+            
+            // Add some sample users for demonstration (only if none exist)
+            const userManager = new UserManager();
+            if (userManager.getUsers().length === 0) {
+                try {
+                    userManager.register('john_doe', 'john@example.com', 'password123');
+                    userManager.register('jane_smith', 'jane@example.com', 'password123');
+                    userManager.register('alex_wong', 'alex@example.com', 'password123');
+                    console.log('Sample users created for demonstration');
+                } catch (error) {
+                    console.error('Error creating sample users:', error);
+                }
+            }
+            
+            // Display initial message
+            console.log('ProConnect application initialized successfully!');
+            console.log('Try logging in with:');
+            console.log('Username: john_doe');
+            console.log('Password: password123');
+        });
+    </script>
+</body>
+</html>
